@@ -11,3 +11,18 @@ It is **not an evaluation set**. Its issues and pull requests are not a benchmar
 - `.github/ISSUE_TEMPLATE/user-story.yml` is the issue form for stories, with Gherkin acceptance criteria.
 - `.github/pull_request_template.md` is the pull request template, with the `Closes #<issue>` line.
 - Issues carry the `story` label.
+
+## Layout
+
+`src/library/` holds the code: `catalog` (books), `members`, `loans` (checkout, return, renew), `fines` (late fees and ledger), `reservations` (waiting queue) and `errors`. Behaviour is deliberately a baseline; later stories extend it.
+
+## Development
+
+Requires Python 3.12 or newer and [uv](https://docs.astral.sh/uv/).
+
+```
+uv sync
+uv run pytest
+uv run ruff check
+uv run ruff format --check
+```
