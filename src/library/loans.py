@@ -12,6 +12,7 @@ from library.members import MemberRegistry
 
 LOAN_DAYS = 14
 RENEWAL_DAYS = 14
+MAX_RENEWALS = 2
 MAX_ACTIVE_LOANS = 5
 FINE_BLOCK_THRESHOLD = Decimal("5.00")
 
@@ -92,15 +93,17 @@ class LoanService:
         return fee
 
     def renew(self, loan_id: int, today: date) -> Loan:
-        """Extend the due date by RENEWAL_DAYS. Overdue loans cannot be renewed.
+        """Extend the due date by RENEWAL_DAYS.
 
-        Known gap: there is no limit on how many times a loan can be renewed.
+        Overdue loans cannot be renewed, and a loan can be renewed at most MAX_RENEWALS times.
         """
         loan = self.get_loan(loan_id)
         if not loan.is_active:
             raise LoanNotAllowedError("loan is already returned")
         if is_overdue(loan, today):
             raise LoanNotAllowedError("overdue loans cannot be renewed")
+        if loan.renewals >= MAX_RENEWALS:
+            raise LoanNotAllowedError("renewal limit reached")
         loan.due_date += timedelta(days=RENEWAL_DAYS)
         loan.renewals += 1
         return loan
