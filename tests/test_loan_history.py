@@ -6,7 +6,7 @@ from library.errors import NotFoundError
 
 
 def test_lists_loans_newest_first(world):  # @AC-1
-    catalog, members, fines, loans = world
+    catalog, _, _, loans = world
     catalog.add_book("222", "Emma", "Jane Austen", copies=1)
     loans.checkout("111", "m1", date(2026, 9, 1))
     loans.checkout("222", "m1", date(2026, 10, 1))
