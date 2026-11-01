@@ -1,0 +1,39 @@
+name: User story
+description: A story with acceptance criteria in Gherkin, as required by the Momus QA issue standard.
+title: "<capability summary>"
+labels: ["story"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue holds one story. Write each acceptance criterion as a Gherkin scenario tagged `@AC-<n>`.
+  - type: textarea
+    id: story
+    attributes:
+      label: Story
+      placeholder: As a <role>, I want <capability>, so that <benefit>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Gherkin only. One Scenario per criterion, each tagged @AC-1, @AC-2, ... Never renumber once a PR references this issue.
+      render: gherkin
+      value: |
+        Feature: <capability>
+
+          @AC-1
+          Scenario: <behaviour>
+            Given <context>
+            When <action>
+            Then <observable outcome>
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Optional context, links or out-of-scope remarks. Not read as acceptance criteria.
+    validations:
+      required: false
