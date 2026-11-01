@@ -13,6 +13,7 @@ from library.members import MemberRegistry
 LOAN_DAYS = 14
 RENEWAL_DAYS = 14
 MAX_ACTIVE_LOANS = 5
+FINE_BLOCK_THRESHOLD = Decimal("5.00")
 
 
 @dataclass
@@ -56,12 +57,14 @@ class LoanService:
     def checkout(self, isbn: str, member_id: str, today: date) -> Loan:
         """Lend a copy for LOAN_DAYS days.
 
-        Rules: the member must be active, under MAX_ACTIVE_LOANS, and a copy must be free.
-        Known gap: unpaid fines do not block a checkout yet.
+        Rules: the member must be active, owe less than FINE_BLOCK_THRESHOLD in fines,
+        be under MAX_ACTIVE_LOANS, and a copy must be free.
         """
         self._members.get_member(member_id)
         if not self._members.is_active(member_id):
             raise LoanNotAllowedError("member is not active")
+        if self._fines.balance(member_id) >= FINE_BLOCK_THRESHOLD:
+            raise LoanNotAllowedError("member has unpaid fines")
         if len(self.active_loans(member_id)) >= MAX_ACTIVE_LOANS:
             raise LoanNotAllowedError("member has reached the active loan limit")
         if self.copies_available(isbn) < 1:
