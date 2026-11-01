@@ -5,6 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 DAILY_RATE = Decimal("0.25")
+MAX_FINE = Decimal("10.00")
 
 
 def days_late(due_date: date, returned_on: date) -> int:
@@ -13,11 +14,8 @@ def days_late(due_date: date, returned_on: date) -> int:
 
 
 def calculate_fine(due_date: date, returned_on: date) -> Decimal:
-    """Return the late fee: DAILY_RATE per day late.
-
-    Known gap: the fee is not capped yet.
-    """
-    return DAILY_RATE * days_late(due_date, returned_on)
+    """Return the late fee: DAILY_RATE per day late, never more than MAX_FINE."""
+    return min(DAILY_RATE * days_late(due_date, returned_on), MAX_FINE)
 
 
 class FineLedger:
