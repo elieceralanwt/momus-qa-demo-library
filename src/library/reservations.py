@@ -4,6 +4,8 @@ from collections import defaultdict, deque
 
 from library.errors import ReservationError
 
+MAX_RESERVATIONS = 3
+
 
 class ReservationQueue:
     """Holds the waiting list for each ISBN.
@@ -19,6 +21,8 @@ class ReservationQueue:
         queue = self._queues[isbn]
         if member_id in queue:
             raise ReservationError("member already has a reservation for this book")
+        if sum(1 for q in self._queues.values() if member_id in q) >= MAX_RESERVATIONS:
+            raise ReservationError("member has reached the reservation limit")
         queue.append(member_id)
         return len(queue)
 
