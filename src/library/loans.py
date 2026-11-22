@@ -34,6 +34,18 @@ class Loan:
         return self.returned_on is None
 
 
+@dataclass(frozen=True)
+class HistoryEntry:
+    """One line of a member's loan history report."""
+
+    loan_id: int
+    isbn: str
+    borrowed_on: date
+    due_date: date
+    returned_on: date | None
+    days_late: int
+
+
 class LoanService:
     """Applies the lending rules on top of the catalog, members and fines."""
 
@@ -53,6 +65,30 @@ class LoanService:
     def active_loans(self, member_id: str) -> list[Loan]:
         """Return the member's loans that have not been returned."""
         return [l for l in self._loans.values() if l.member_id == member_id and l.is_active]
+
+    def history(self, member_id: str, today: date) -> list[HistoryEntry]:
+        """Return every loan of the member, newest first, with the days each was late.
+
+        A returned loan is late by the days between its due date and its return date; an
+        active loan past its due date counts the days up to today.
+        """
+        self._members.get_member(member_id)
+        loans = sorted(
+            (loan for loan in self._loans.values() if loan.member_id == member_id),
+            key=lambda loan: (loan.borrowed_on, loan.loan_id),
+            reverse=True,
+        )
+        return [
+            HistoryEntry(
+                loan.loan_id,
+                loan.isbn,
+                loan.borrowed_on,
+                loan.due_date,
+                loan.returned_on,
+                max(0, ((loan.returned_on or today) - loan.due_date).days),
+            )
+            for loan in loans
+        ]
 
     def checkout(self, isbn: str, member_id: str, today: date) -> Loan:
         """Lend a copy for LOAN_DAYS days.
