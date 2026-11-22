@@ -43,3 +43,9 @@ class FineLedger:
     def balance(self, member_id: str) -> Decimal:
         """Return the unpaid balance of a member (0 if none)."""
         return self._balances.get(member_id, Decimal(0))
+
+    def waive(self, member_id: str) -> Decimal:
+        """Clear the member's balance and return the amount waived (0 if none)."""
+        waived = self.balance(member_id)
+        self._balances[member_id] = Decimal(0)
+        return waived
