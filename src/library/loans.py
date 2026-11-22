@@ -8,7 +8,7 @@ from itertools import count
 from library.catalog import Catalog
 from library.errors import LoanNotAllowedError, NotFoundError
 from library.fines import FineLedger, calculate_fine
-from library.members import MemberRegistry
+from library.members import Member, MemberRegistry
 
 LOAN_DAYS = 14
 RENEWAL_DAYS = 14
@@ -90,6 +90,13 @@ class LoanService:
         if fee > 0:
             self._fines.add_fine(loan.member_id, fee)
         return fee
+
+    def deactivate_member(self, member_id: str) -> Member:
+        """Deactivate a member, refusing while they still hold books."""
+        self._members.get_member(member_id)
+        if self.active_loans(member_id):
+            raise LoanNotAllowedError("member has active loans")
+        return self._members.deactivate(member_id)
 
     def renew(self, loan_id: int, today: date) -> Loan:
         """Extend the due date by RENEWAL_DAYS. Overdue loans cannot be renewed.
