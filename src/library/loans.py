@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from itertools import count
 
-from library.catalog import Catalog
+from library.catalog import Book, Catalog
 from library.errors import LoanNotAllowedError, NotFoundError
 from library.fines import FineLedger, calculate_fine
 from library.members import MemberRegistry
@@ -49,6 +49,10 @@ class LoanService:
         book = self._catalog.get_book(isbn)
         lent = sum(1 for loan in self._loans.values() if loan.isbn == isbn and loan.is_active)
         return book.copies - lent
+
+    def search_available(self, text: str) -> list[Book]:
+        """Return the books matching `text` that have at least one copy free."""
+        return [b for b in self._catalog.search(text) if self.copies_available(b.isbn) > 0]
 
     def active_loans(self, member_id: str) -> list[Loan]:
         """Return the member's loans that have not been returned."""
