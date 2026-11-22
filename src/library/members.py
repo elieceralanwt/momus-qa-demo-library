@@ -38,6 +38,14 @@ class MemberRegistry:
         except KeyError:
             raise NotFoundError(f"member {member_id} not found") from None
 
+    def update_email(self, member_id: str, email: str) -> Member:
+        """Change a member's email. The member must exist and the email must contain '@'."""
+        member = self.get_member(member_id)
+        if "@" not in email:
+            raise ValueError("email must contain '@'")
+        member.email = email
+        return member
+
     def deactivate(self, member_id: str) -> Member:
         """Mark a member inactive so they can no longer borrow."""
         member = self.get_member(member_id)
