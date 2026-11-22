@@ -43,3 +43,7 @@ class ReservationQueue:
         """Remove and return the member at the front of the queue."""
         queue = self._queues.get(isbn)
         return queue.popleft() if queue else None
+
+    def waiting_list(self, isbn: str) -> list[str]:
+        """Return a copy of the queue for a title, in reservation order."""
+        return list(self._queues.get(isbn, ()))
