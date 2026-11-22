@@ -2,7 +2,9 @@
 
 from collections import defaultdict, deque
 
+from library.catalog import Catalog
 from library.errors import ReservationError
+from library.members import MemberRegistry
 
 
 class ReservationQueue:
@@ -43,3 +45,23 @@ class ReservationQueue:
         """Remove and return the member at the front of the queue."""
         queue = self._queues.get(isbn)
         return queue.popleft() if queue else None
+
+
+class ReservationService:
+    """Validates a reservation request against the catalog and members before queueing it."""
+
+    def __init__(self, catalog: Catalog, members: MemberRegistry, queue: ReservationQueue) -> None:
+        self._catalog = catalog
+        self._members = members
+        self._queue = queue
+
+    def reserve(self, isbn: str, member_id: str) -> int:
+        """Queue an active member for a catalog title and return their 1-based position.
+
+        Raises NotFoundError for an unknown title or member, ReservationError for an inactive member.
+        """
+        self._catalog.get_book(isbn)
+        self._members.get_member(member_id)
+        if not self._members.is_active(member_id):
+            raise ReservationError("member is not active")
+        return self._queue.reserve(isbn, member_id)
