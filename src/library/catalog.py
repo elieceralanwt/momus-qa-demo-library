@@ -54,3 +54,8 @@ class Catalog:
         book = self.get_book(isbn)
         book.copies += count
         return book
+
+    def remove_book(self, isbn: str) -> None:
+        """Remove a title from the catalog or raise NotFoundError."""
+        self.get_book(isbn)
+        del self._books[isbn]
