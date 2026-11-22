@@ -9,6 +9,7 @@ from library.catalog import Catalog
 from library.errors import LoanNotAllowedError, NotFoundError
 from library.fines import FineLedger, calculate_fine
 from library.members import MemberRegistry
+from library.reservations import ReservationQueue
 
 LOAN_DAYS = 14
 RENEWAL_DAYS = 14
@@ -37,10 +38,17 @@ class Loan:
 class LoanService:
     """Applies the lending rules on top of the catalog, members and fines."""
 
-    def __init__(self, catalog: Catalog, members: MemberRegistry, fines: FineLedger) -> None:
+    def __init__(
+        self,
+        catalog: Catalog,
+        members: MemberRegistry,
+        fines: FineLedger,
+        reservations: ReservationQueue | None = None,
+    ) -> None:
         self._catalog = catalog
         self._members = members
         self._fines = fines
+        self._reservations = reservations if reservations is not None else ReservationQueue()
         self._loans: dict[int, Loan] = {}
         self._ids = count(1)
 
@@ -58,7 +66,8 @@ class LoanService:
         """Lend a copy for LOAN_DAYS days.
 
         Rules: the member must be active, owe less than FINE_BLOCK_THRESHOLD in fines,
-        be under MAX_ACTIVE_LOANS, and a copy must be free.
+        be under MAX_ACTIVE_LOANS, a copy must be free, and the member must be first in the
+        reservation queue when one exists (they leave the queue once they borrow).
         """
         self._members.get_member(member_id)
         if not self._members.is_active(member_id):
@@ -69,6 +78,11 @@ class LoanService:
             raise LoanNotAllowedError("member has reached the active loan limit")
         if self.copies_available(isbn) < 1:
             raise LoanNotAllowedError("no copies available")
+        next_member = self._reservations.next_in_line(isbn)
+        if next_member is not None and next_member != member_id:
+            raise LoanNotAllowedError("book is reserved for another member")
+        if next_member == member_id:
+            self._reservations.pop_next(isbn)
         loan = Loan(next(self._ids), isbn, member_id, today, today + timedelta(days=LOAN_DAYS))
         self._loans[loan.loan_id] = loan
         return loan

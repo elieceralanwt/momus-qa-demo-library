@@ -8,7 +8,7 @@ from library.errors import ReservationError
 class ReservationQueue:
     """Holds the waiting list for each ISBN.
 
-    Known gaps: holds never expire, and checkout does not consult the queue yet.
+    Known gap: holds never expire.
     """
 
     def __init__(self) -> None:
