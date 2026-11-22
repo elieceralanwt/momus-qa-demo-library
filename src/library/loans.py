@@ -14,6 +14,7 @@ LOAN_DAYS = 14
 RENEWAL_DAYS = 14
 MAX_ACTIVE_LOANS = 5
 FINE_BLOCK_THRESHOLD = Decimal("5.00")
+LOST_BOOK_FEE = Decimal("15.00")
 
 
 @dataclass
@@ -90,6 +91,16 @@ class LoanService:
         if fee > 0:
             self._fines.add_fine(loan.member_id, fee)
         return fee
+
+    def report_lost(self, loan_id: int, today: date) -> Loan:
+        """Close a loan for a lost book, charge LOST_BOOK_FEE (no late fee) and remove the copy."""
+        loan = self.get_loan(loan_id)
+        if not loan.is_active:
+            raise LoanNotAllowedError("loan is already returned")
+        loan.returned_on = today
+        self._catalog.get_book(loan.isbn).copies -= 1
+        self._fines.add_fine(loan.member_id, LOST_BOOK_FEE)
+        return loan
 
     def renew(self, loan_id: int, today: date) -> Loan:
         """Extend the due date by RENEWAL_DAYS. Overdue loans cannot be renewed.
