@@ -91,6 +91,11 @@ class LoanService:
             self._fines.add_fine(loan.member_id, fee)
         return fee
 
+    def overdue_loans(self, today: date) -> list[Loan]:
+        """Return the loans that are overdue on `today`, earliest due date first."""
+        overdue = [loan for loan in self._loans.values() if is_overdue(loan, today)]
+        return sorted(overdue, key=lambda loan: loan.due_date)
+
     def renew(self, loan_id: int, today: date) -> Loan:
         """Extend the due date by RENEWAL_DAYS. Overdue loans cannot be renewed.
 
