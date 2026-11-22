@@ -88,7 +88,7 @@ class LoanService:
         loan.returned_on = today
         fee = calculate_fine(loan.due_date, today)
         if fee > 0:
-            self._fines.add_fine(loan.member_id, fee)
+            self._fines.add_fine(loan.member_id, fee, f"late return of loan {loan_id}")
         return fee
 
     def renew(self, loan_id: int, today: date) -> Loan:

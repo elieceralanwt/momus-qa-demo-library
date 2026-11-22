@@ -1,6 +1,7 @@
 """Fines: late fees for overdue returns and a per-member ledger."""
 
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
@@ -18,17 +19,27 @@ def calculate_fine(due_date: date, returned_on: date) -> Decimal:
     return min(DAILY_RATE * days_late(due_date, returned_on), MAX_FINE)
 
 
+@dataclass(frozen=True)
+class FineEntry:
+    """One fine charged to a member, with the reason it was charged."""
+
+    amount: Decimal
+    reason: str = ""
+
+
 class FineLedger:
     """Tracks the unpaid fine balance of each member."""
 
     def __init__(self) -> None:
         self._balances: defaultdict[str, Decimal] = defaultdict(Decimal)
+        self._entries: defaultdict[str, list[FineEntry]] = defaultdict(list)
 
-    def add_fine(self, member_id: str, amount: Decimal) -> Decimal:
-        """Add a fine to the member's balance and return the new balance."""
+    def add_fine(self, member_id: str, amount: Decimal, reason: str = "") -> Decimal:
+        """Add a fine to the member's balance, record it with its reason and return the new balance."""
         if amount < 0:
             raise ValueError("amount must not be negative")
         self._balances[member_id] += amount
+        self._entries[member_id].append(FineEntry(amount, reason))
         return self._balances[member_id]
 
     def pay(self, member_id: str, amount: Decimal) -> Decimal:
@@ -43,3 +54,7 @@ class FineLedger:
     def balance(self, member_id: str) -> Decimal:
         """Return the unpaid balance of a member (0 if none)."""
         return self._balances.get(member_id, Decimal(0))
+
+    def statement(self, member_id: str) -> list[FineEntry]:
+        """Return the member's fine entries in the order they were added (payments do not remove them)."""
+        return list(self._entries.get(member_id, []))
