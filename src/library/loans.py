@@ -91,6 +91,13 @@ class LoanService:
             self._fines.add_fine(loan.member_id, fee)
         return fee
 
+    def projected_fine(self, loan_id: int, today: date) -> Decimal:
+        """Return the late fee the loan would incur if returned on `today`, without charging it."""
+        loan = self.get_loan(loan_id)
+        if not loan.is_active:
+            raise LoanNotAllowedError("loan is already returned")
+        return calculate_fine(loan.due_date, today)
+
     def renew(self, loan_id: int, today: date) -> Loan:
         """Extend the due date by RENEWAL_DAYS. Overdue loans cannot be renewed.
 
